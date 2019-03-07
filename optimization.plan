@@ -1,0 +1,15 @@
+[V] Replace URL class with String as Cache Key. Result: Improved stream filter performance in 46 times (4600%).
+[V] Adjusted thread pool size: ThreadPoolExecutor(parallelism*6, parallelism*6. Result: Compensated network delays and improved collection Urls speed in 2.48 times (248%)
+[V] Change architecture from new Thread for each new http request -> to call NIO Http Client (Jetty) which use only several threads for huge amount of parallel requests.
+	Result: Improved parallel requests speed in 11.8 times (1180%). 
+[V] Cache replaced with Thread-safe Cache implementation and removed synchronized block. Result: in current configured thread count no difference detected.
+[V] Removed double checks (for example: HTTP_FILTER test remove because it repeat extractLinks RegExp checks.)
+[V] Added Links Prioritization logic using PriorityBlockingQueue -> External links has high priority to distribute the load on external sites from initial site (to avoid DDOS effect on initial site)
+[V] Move conversion WithoutAnchorAndQuery into extractLinks (logically solid actions).
+[V] Do not create empty links.txt file when 0 links extracted.
+
+
+Tested on URLS:
+http://www.hikorea.ru/en/auxpage_katalog-sajtov/
+http://cat.spbland.ru/cat_id/115/
+https://en.wikipedia.org/wiki/(486958)_2014_MU69
