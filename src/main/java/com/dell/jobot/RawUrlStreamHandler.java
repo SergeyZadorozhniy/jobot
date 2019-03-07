@@ -12,10 +12,4 @@ public interface RawUrlStreamHandler {
 	 @param inStream The stream of the raw URLs which should be converted, filtered and handled
 	 */
 	void handle(final URL parent, final @NonNull Stream<String> inStream);
-	
-	/**
-	 @param parent The origin URL, may be null
-	 @param urls Array of raw URLs which should be converted, filtered and handled
-	 */
-	void handle(final URL parent, final @NonNull String[] urls);
 }
