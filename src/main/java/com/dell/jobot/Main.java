@@ -2,39 +2,53 @@ package com.dell.jobot;
 
 import lombok.val;
 
-import java.net.URL;
-import java.util.Arrays;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.function.Predicate;
-
-import static com.dell.jobot.UrlUtil.HTTP_FILTER;
-import static java.util.concurrent.TimeUnit.SECONDS;
+import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.http.HttpClientTransportOverHTTP;
 
 public class Main {
 
 	static final int QUEUE_CAPACITY = 1_000_000;
 	static final int CACHE_CAPACITY = 1_000_000;
+	static final int SELECTORS = 1;
 
 	public static void main(final String... args) {
 		if(0 == args.length) {
 			printUsage();
 		} else {
-			val parallelism = Runtime.getRuntime().availableProcessors();
-			val queue = new ArrayBlockingQueue<Runnable>(QUEUE_CAPACITY);
-			val threadFactory = new DaemonThreadFactory();
-			val rejectionHandler = new IgnoringRejectionExecutionHandler();
-			val executor = new ThreadPoolExecutor(
-				parallelism, parallelism, 0, SECONDS, queue, threadFactory, rejectionHandler
-			);
-			val uniqueUrlFilter = new FixedCacheUniquenessFilter<URL>(CACHE_CAPACITY);
-			val handler = new HttpUrlStreamHandler(executor, url -> HTTP_FILTER.test(url) && uniqueUrlFilter.test(url));
+
+			/* Creating Jetty NIO HttpClient */
+			val httpClient = new HttpClient(new HttpClientTransportOverHTTP(SELECTORS), null);
 			try {
-				handler.handle(null, Arrays.stream(args));
-				try {
-					executor.awaitTermination(Long.MAX_VALUE, SECONDS);
-				} catch(final InterruptedException ok) {
+				httpClient.start();
+			} catch (Exception e1) {
+				e1.printStackTrace(System.err);
+			}
+			/* Creating Blocking queue for HttpRequest tasks */
+			val urlsQueue = new PriorityBlockingQueue<HttpUrlProcessingTask>(QUEUE_CAPACITY);
+
+			val uniqueUrlFilter = new FixedCacheUniquenessFilter<String>(CACHE_CAPACITY);
+			val handler = new HttpUrlStreamHandler(url -> /* Removed as duplicate check HTTP_FILTER.test(url) &&*/ uniqueUrlFilter.test(url.toString()), urlsQueue);
+
+			/* Creating separate Thread to listen Blocking urlsQueue and send new requests to NIO HttpClient(When Queue is empty Thread is just sleeping) */
+			new Thread() {
+				@Override
+				public void run() {
+					while (true) {
+						try {
+							val task = urlsQueue.poll(10, TimeUnit.DAYS);
+							httpClient.newRequest(task.getUrl().toString())
+								.send(task);
+						} catch (InterruptedException e) {
+							e.printStackTrace(System.err);
+						}
+					}
 				}
+			}.start();
+
+			try {
+				handler.handle(null, args);
 			} catch(final Exception e) {
 				e.printStackTrace(System.err);
 			}

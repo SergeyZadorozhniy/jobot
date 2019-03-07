@@ -5,20 +5,20 @@ import lombok.NonNull;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 public interface UrlUtil {
 
-	static Optional<URL> convertToUrlWithoutAnchorAndQuery(final @NonNull String raw) {
-		String t = raw;
-		if(t.contains("#")) {
-			t = t.substring(0, t.indexOf("#"));
-		}
-		if(t.contains("?")) {
-			t = t.substring(0, t.indexOf("?"));
-		}
+	static Optional<URL> convertToUrl(final @NonNull String raw) {
+		/* Moved to HyperlinkUtil.java */
+		//String t = raw;
+		//if(t.contains("#")) {
+		//	t = t.substring(0, t.indexOf("#"));
+		//}
+		//if(t.contains("?")) {
+		//	t = t.substring(0, t.indexOf("?"));
+		//}
 		try {
-			return Optional.of(new URL(t));
+			return Optional.of(new URL(raw));
 		} catch(final MalformedURLException e) {
 			System.err.println("Failed to convert \"" + raw + "\" to URL");
 			return Optional.empty();
@@ -27,5 +27,6 @@ public interface UrlUtil {
 		}
 	}
 
-	Predicate<URL> HTTP_FILTER = url -> url.getProtocol().startsWith("http");
+	/* Removed as duplicate check */
+	//Predicate<URL> HTTP_FILTER = url -> url.getProtocol().equals("http");
 }
