@@ -34,9 +34,9 @@ implements RawUrlStreamHandler {
 		this.urlsQueue = urlsQueue;
 	}
 	
-	private void addUrlsQueue(HttpUrlProcessingTask task) {
-		urlsQueue.add(task);
-		PerformanceMonitor.trackTasksSubmit(task);
+	private void addUrlToQueue(HttpUrlProcessingTask urlTask) {
+		urlsQueue.add(urlTask);
+		PerformanceMonitor.trackTasksSubmit(urlTask);
 	}
 
 	@Override
@@ -51,9 +51,10 @@ implements RawUrlStreamHandler {
 				/* Cleaned up redundant/double checks */
 				.map(UrlUtil::convertToUrl)
 				.filter(Optional::isPresent)
-				.map(Optional::get).filter(urlFilter)
+				.map(Optional::get)
+				.filter(urlFilter)
 				.map(url -> new HttpUrlProcessingTask(this, url, parent))
-				.peek(this::addUrlsQueue)
+				.peek(this::addUrlToQueue)
 				.map(HttpUrlProcessingTask::getUrl)
 				.collect(Collectors.toList());
 
@@ -68,8 +69,6 @@ implements RawUrlStreamHandler {
 			}
 			try (val linksFileWriter = Files.newBufferedWriter(outputPath, StandardOpenOption.CREATE,
 					StandardOpenOption.TRUNCATE_EXISTING)) {
-				/*.map(url -> new HttpUrlProcessingTask(this, url, parent))
-					.peek(this::submit)*/
 				urls.forEach(url -> {
 					try {
 						linksFileWriter.append(url.toString());

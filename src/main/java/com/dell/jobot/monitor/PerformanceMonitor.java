@@ -6,7 +6,7 @@ import com.dell.jobot.HttpUrlProcessingTask;
 
 public class PerformanceMonitor {
 	private static final int STEP = 1000;
-	private static final int REUESTS_STEP = 100;
+	private static final int REQUESTS_STEP = 100;
 	private static final AtomicLong startTime = new AtomicLong(System.currentTimeMillis());
 	private static final AtomicLong countFromLastTime = new AtomicLong(0);
 	private static final AtomicLong timeSum = new AtomicLong(0L);
@@ -20,7 +20,7 @@ public class PerformanceMonitor {
 			countFromLastTime.set(0);
 			long currentTimeSum = timeSum.addAndGet(result);
 			int currentSteps = steps.addAndGet(1);
-			System.err.println("\n>>>>>>> [ADD " + STEP + " Urls takes]: " + result + "ms Avg: "
+			System.err.println("\n>>>>>>> [Added " + STEP + " new links, takes]: " + result + "ms Avg: "
 					+ currentTimeSum / currentSteps + "ms");
 		}
 	}
@@ -28,13 +28,13 @@ public class PerformanceMonitor {
 	public static final void trackUrlsCollected(int count) {
 		int size;
 		if ((size = count) % STEP == 0)
-			System.err.println("\n>>>>>>> [Urls Collected]: " + size + " urls");
+			System.err.println("\n>>>>>>> [Total links Collected]: " + size + " urls");
 	}
 
 	public static final void trackUrlsRequestReceived() {
 		long requests;
-		if ((requests = completedRequests.incrementAndGet()) % REUESTS_STEP == 0) {
-			System.err.println("\n>>>>>>> [" + REUESTS_STEP + " Request completed]: " + requests);
+		if ((requests = completedRequests.incrementAndGet()) % REQUESTS_STEP == 0) {
+			System.err.println("\n>>>>>>> [Requests completed]: " + requests);
 		}
 	}
 }
